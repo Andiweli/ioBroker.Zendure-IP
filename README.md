@@ -38,3 +38,8 @@ Then install with ioBroker from GitHub / URL.
 - This adapter polls `http://<ip>/properties/report`
 - It is intended for local Zendure devices that expose this JSON endpoint
 - State creation is dynamic and based on the received JSON structure
+
+
+## Package update
+
+This package was refreshed to version 0.1.2 and now includes a real adapter icon.

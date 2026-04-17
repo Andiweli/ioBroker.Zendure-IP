@@ -1,6 +1,6 @@
 {
   "name": "iobroker.zendure-ip",
-  "version": "0.1.1",
+  "version": "0.0.1",
   "description": "ioBroker adapter to poll local Zendure device JSON via IP for up to 10 devices.",
   "author": "OpenAI",
   "license": "MIT",

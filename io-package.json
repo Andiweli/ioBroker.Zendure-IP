@@ -1,13 +1,9 @@
 {
   "common": {
     "name": "zendure-ip",
-    "version": "0.1.1",
+    "version": "0.0.1",
     "news": {
-      "0.1.1": {
-        "en": "Reworked package structure and metadata for easier custom installation.",
-        "de": "Paketstruktur und Metadaten f\u00fcr einfachere Custom-Installation \u00fcberarbeitet."
-      },
-      "0.1.0": {
+      "0.0.1": {
         "en": "Initial version",
         "de": "Erste Version"
       }
@@ -18,7 +14,7 @@
     },
     "desc": {
       "en": "Polls local Zendure device JSON via IP and stores all values as states.",
-      "de": "Fragt lokales Zendure-Ger\u00e4te-JSON per IP ab und speichert alle Werte als States."
+      "de": "Fragt lokales Zendure-Geräte-JSON per IP ab und speichert alle Werte als States."
     },
     "authors": [
       "OpenAI"
