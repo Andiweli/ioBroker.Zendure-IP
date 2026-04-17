@@ -1,0 +1,68 @@
+{
+  "common": {
+    "name": "zendure-ip",
+    "version": "0.1.1",
+    "news": {
+      "0.1.1": {
+        "en": "Reworked package structure and metadata for easier custom installation.",
+        "de": "Paketstruktur und Metadaten f\u00fcr einfachere Custom-Installation \u00fcberarbeitet."
+      },
+      "0.1.0": {
+        "en": "Initial version",
+        "de": "Erste Version"
+      }
+    },
+    "titleLang": {
+      "en": "Zendure IP",
+      "de": "Zendure IP"
+    },
+    "desc": {
+      "en": "Polls local Zendure device JSON via IP and stores all values as states.",
+      "de": "Fragt lokales Zendure-Ger\u00e4te-JSON per IP ab und speichert alle Werte als States."
+    },
+    "authors": [
+      "OpenAI"
+    ],
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "zendure-ip.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/Andiweli/ioBroker.zendure-ip/main/admin/zendure-ip.png",
+    "readme": "https://github.com/Andiweli/ioBroker.zendure-ip/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "energy",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.0"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.0.0"
+      }
+    ]
+  },
+  "native": {
+    "devices": [
+      {
+        "name": "Zendure 2400 Pro",
+        "ip": "10.1.0.245",
+        "intervalSec": 10
+      }
+    ]
+  },
+  "objects": [],
+  "instanceObjects": []
+}

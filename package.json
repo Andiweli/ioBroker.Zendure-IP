@@ -1,0 +1,29 @@
+{
+  "name": "iobroker.zendure-ip",
+  "version": "0.1.1",
+  "description": "ioBroker adapter to poll local Zendure device JSON via IP for up to 10 devices.",
+  "author": "OpenAI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Andiweli/ioBroker.zendure-ip.git"
+  },
+  "homepage": "https://github.com/Andiweli/ioBroker.zendure-ip",
+  "bugs": {
+    "url": "https://github.com/Andiweli/ioBroker.zendure-ip/issues"
+  },
+  "main": "main.js",
+  "keywords": [
+    "iobroker",
+    "zendure",
+    "energy",
+    "solar",
+    "local"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  }
+}
