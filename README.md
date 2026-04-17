@@ -1,67 +1,95 @@
-# ioBroker.zendure-ip
+<p align="center">
+  <img src="admin/zendure-ip.png" alt="Zendure IP logo" width="120" />
+</p>
 
-Simple local polling adapter for Zendure devices.
+<h1 align="center">ioBroker.zendure-ip</h1>
+
+<p align="center">
+  Local Zendure polling adapter for ioBroker with optional HEMS aggregation.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.0.5-blue.svg" alt="Version 0.0.5" />
+  <img src="https://img.shields.io/badge/language-JavaScript-f7df1e.svg?logo=javascript&logoColor=000" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" />
+</p>
+
+> [!IMPORTANT]
+> This adapter polls Zendure devices locally via `http://<ip>/properties/report` and stores a curated state set instead of dumping the full raw JSON into dozens of unnecessary objects.
+
+> [!NOTE]
+> This adapter is **read-only**. It does not control Zendure devices; it reads data and generates daily counters.  
+> For full control features, the recommended adapter is **nograx' Zendure adapter**: `https://github.com/nograx/ioBroker.zendure-solarflow`
 
 ## Features
 
-- Up to 10 devices
-- Per device: name, IP, poll interval, `Device is in HEMS`
-- Device names become channel names under the adapter namespace
-- Spaces in names are converted to `-`
-- Polls `http://<ip>/properties/report`
-- Stores a curated device state set based on the user's working scripts
-- Creates an additional `HEMS` object tree when at least one device is marked as `Device is in HEMS`
+- Poll up to **10 Zendure devices** locally
+- Device name becomes the folder name under the adapter namespace
+- Spaces in device names are converted to `-`
+- Curated device states based on the provided per-device script set
+- Optional **HEMS** object tree for devices marked with **Device is in HEMS**
+- Per-device daily counters under `device-name/today`
+- Aggregated daily counters under `HEMS/today`
 
-## Device states
+## Device objects
 
-Per device the adapter writes curated states such as:
+Each device gets a compact state set such as:
 
+- `product`, `serial`, `messageId`, `timestamp`
 - `soc`
-- `acPowerW`
-- `acDirectionW`
-- `acChargingW`
-- `acDischargingW`
-- `solarInputPower`
-- `solarPower1..4`
-- `outputPackPower`
-- `packInputPower`
-- `minSocRaw`, `minSocPct`
-- `socSetRaw`, `socSetPct`
-- `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `rawJson`
+- `acPowerW`, `acDirectionW`, `acChargingW`, `acDischargingW`
+- `solarInputPower`, `solarPower1..4`
+- `outputPackPower`, `packInputPower`, `outputHomePower`, `gridInputPower`
+- `minSocPct`, `socSetPct`
+- `packNum`
+- `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `lastError`, `rawJson`
+- `deviceIsInHems`
 
-Excluded on purpose:
+### Removed on purpose
 
-- `inHems`
+To keep the object tree clean, these are not created anymore:
+
+- `version`
+- `minSocRaw`
+- `socSetRaw`
 - `smartMode`
+- `inHems`
 - `socLimit`
 - `wearLevelPct`
 
-## HEMS aggregation
-
-If at least one configured device has `Device is in HEMS` enabled, the adapter creates `HEMS.*` states with aggregated values like:
-
-- `socAvg`
-- `acChargingW`
-- `acDischargingW`
-- `acDirectionW`
-- `acPowerW`
-- `solarInputPower`
-- `batteryChargeTotalW`
-- `batteryDischargeTotalW`
-- `batteryNetPowerW`
-- `batteryNetModeText`
-- `minSocPct`
-- `socSetPct`
-
-## Install
-
-Install from GitHub as a custom adapter, for example:
-
-```bash
- iobroker url https://github.com/Andiweli/ioBroker.zendure-ip
-```
-
-
 ## Daily counters
 
-The adapter creates per-device daily counters under `<device>.today` and aggregated HEMS daily counters under `HEMS.today`.
+### Per device
+
+Under `device-name/today`:
+
+- `acImportTodayKWh`
+- `acExportTodayKWh`
+- for `2400pro` also `pvToBatteryTodayKWh`
+
+### HEMS aggregate
+
+Under `HEMS/today`:
+
+- `acImportTodayKWh`
+- `acExportTodayKWh`
+- `pvToBatteryTodayKWh`
+
+## Configuration
+
+The adapter configuration page is intentionally small:
+
+- **Device name**
+- **IP address**
+- **Interval (s)**
+- **Device is in HEMS**
+
+## Notes
+
+- The adapter is designed for **local readout only**
+- No write/control commands are sent to Zendure devices
+- HEMS aggregation is built from the devices you explicitly mark with **Device is in HEMS**
+
+## License
+
+MIT

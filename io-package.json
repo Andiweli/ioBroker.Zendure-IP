@@ -1,15 +1,23 @@
 {
   "common": {
     "name": "zendure-ip",
-    "version": "0.0.3",
+    "version": "0.0.5",
     "news": {
+      "0.0.5": {
+        "en": "Renamed the config tab to Einstellungen, added a read-only usage note with recommended control adapter, and improved license metadata.",
+        "de": "Den Konfigurationsreiter in Einstellungen umbenannt, einen Read-only-Hinweis mit empfohlenem Steuerungs-Adapter ergänzt und die Lizenzmetadaten verbessert."
+      },
+      "0.0.4": {
+        "en": "Removed unnecessary raw/today Wh states, removed version/minSocRaw/socSetRaw device states, ensured dynamic 2400 Pro pvToBatteryTodayKWh creation, and refreshed README.",
+        "de": "Unnötige Raw-/Today-Wh-States entfernt, Version/minSocRaw/socSetRaw bei Geräten entfernt, dynamische Anlage von pvToBatteryTodayKWh für den 2400 Pro ergänzt und README überarbeitet."
+      },
       "0.0.3": {
         "en": "Added per-device daily counters and aggregated HEMS daily counters under HEMS.today.",
-        "de": "Tagesz\u00e4hler pro Ger\u00e4t und aggregierte HEMS-Tagesz\u00e4hler unter HEMS.today erg\u00e4nzt."
+        "de": "Tageszähler pro Gerät und aggregierte HEMS-Tageszähler unter HEMS.today ergänzt."
       },
       "0.0.2": {
         "en": "Reduced device objects to the curated Zendure state set and added optional HEMS aggregation via per-device checkbox.",
-        "de": "Ger\u00e4teobjekte auf den kuratierten Zendure-State-Satz reduziert und optionale HEMS-Aggregation per Ger\u00e4te-Checkbox erg\u00e4nzt."
+        "de": "Geräteobjekte auf den kuratierten Zendure-State-Satz reduziert und optionale HEMS-Aggregation per Geräte-Checkbox ergänzt."
       },
       "0.0.1": {
         "en": "Initial version",
@@ -22,7 +30,7 @@
     },
     "desc": {
       "en": "Polls local Zendure devices via IP, stores a curated device state set and can aggregate selected devices into a HEMS object tree.",
-      "de": "Fragt lokale Zendure-Ger\u00e4te per IP ab, speichert einen kuratierten Ger\u00e4te-State-Satz und kann ausgew\u00e4hlte Ger\u00e4te in einen HEMS-Objektbaum aggregieren."
+      "de": "Fragt lokale Zendure-Geräte per IP ab, speichert einen kuratierten Geräte-State-Satz und kann ausgewählte Geräte in einen HEMS-Objektbaum aggregieren."
     },
     "authors": [
       "OpenAI"
@@ -56,7 +64,8 @@
       {
         "admin": ">=7.0.0"
       }
-    ]
+    ],
+    "license": "MIT"
   },
   "native": {
     "devices": []
