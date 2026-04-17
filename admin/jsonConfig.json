@@ -4,7 +4,7 @@
   "items": {
     "mainTab": {
       "type": "panel",
-      "label": "Main settings",
+      "label": "Einstellungen",
       "items": {
         "devicesInfo": {
           "type": "staticText",
@@ -45,6 +45,11 @@
               "width": "18%"
             }
           ]
+        },
+        "note": {
+          "newLine": true,
+          "type": "staticText",
+          "text": "Note: This adapter is read-only. It does not control Zendure devices; it only reads device data and generates daily counters. For full control features, nograx' Zendure adapter is recommended: https://github.com/nograx/ioBroker.zendure-solarflow"
         }
       }
     }
