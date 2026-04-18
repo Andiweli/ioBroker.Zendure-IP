@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.0.5-blue.svg" alt="Version 0.0.5" />
-  <img src="https://img.shields.io/badge/language-JavaScript-f7df1e.svg?logo=javascript&logoColor=000" alt="JavaScript" />
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" />
+  <img src="https://img.shields.io/badge/version-0.0.7-16a34a.svg" alt="Version 0.0.7" />
+  <img src="https://img.shields.io/badge/language-JavaScript-16a34a.svg?logo=javascript&logoColor=fff" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/license-MIT-16a34a.svg" alt="MIT License" />
 </p>
 
 > [!IMPORTANT]
@@ -21,7 +21,7 @@
 > This adapter is **read-only**. It does not control Zendure devices; it reads data and generates daily counters.  
 > For full control features, the recommended adapter is **nograx' Zendure adapter**: `https://github.com/nograx/ioBroker.zendure-solarflow`
 
-## Features
+## 🟢 Features
 
 - Poll up to **10 Zendure devices** locally
 - Device name becomes the folder name under the adapter namespace
@@ -31,7 +31,7 @@
 - Per-device daily counters under `device-name/today`
 - Aggregated daily counters under `HEMS/today`
 
-## Device objects
+## 🟢 Device objects
 
 Each device gets a compact state set such as:
 
@@ -45,7 +45,7 @@ Each device gets a compact state set such as:
 - `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `lastError`, `rawJson`
 - `deviceIsInHems`
 
-### Removed on purpose
+### 🟢 Removed on purpose
 
 To keep the object tree clean, these are not created anymore:
 
@@ -57,9 +57,9 @@ To keep the object tree clean, these are not created anymore:
 - `socLimit`
 - `wearLevelPct`
 
-## Daily counters
+## 🟢 Daily counters
 
-### Per device
+### 🟢 Per device
 
 Under `device-name/today`:
 
@@ -67,7 +67,7 @@ Under `device-name/today`:
 - `acExportTodayKWh`
 - for `2400pro` also `pvToBatteryTodayKWh`
 
-### HEMS aggregate
+### 🟢 HEMS aggregate
 
 Under `HEMS/today`:
 
@@ -75,7 +75,7 @@ Under `HEMS/today`:
 - `acExportTodayKWh`
 - `pvToBatteryTodayKWh`
 
-## Configuration
+## 🟢 Configuration
 
 The adapter configuration page is intentionally small:
 
@@ -84,12 +84,12 @@ The adapter configuration page is intentionally small:
 - **Interval (s)**
 - **Device is in HEMS**
 
-## Notes
+## 🟢 Notes
 
 - The adapter is designed for **local readout only**
 - No write/control commands are sent to Zendure devices
 - HEMS aggregation is built from the devices you explicitly mark with **Device is in HEMS**
 
-## License
+## 🟢 License
 
 MIT

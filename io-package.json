@@ -1,8 +1,16 @@
 {
   "common": {
     "name": "zendure-ip",
-    "version": "0.0.5",
+    "version": "0.0.7",
     "news": {
+      "0.0.7": {
+        "en": "Updated the adapter icon and refreshed the README styling with green section icons.",
+        "de": "Adapter-Icon aktualisiert und das README mit grünen Abschnitts-Icons überarbeitet."
+      },
+      "0.0.6": {
+        "en": "Restored the adapter icon and kept the configuration/license improvements.",
+        "de": "Das Adapter-Icon wiederhergestellt und die Konfigurations-/Lizenzanpassungen beibehalten."
+      },
       "0.0.5": {
         "en": "Renamed the config tab to Einstellungen, added a read-only usage note with recommended control adapter, and improved license metadata.",
         "de": "Den Konfigurationsreiter in Einstellungen umbenannt, einen Read-only-Hinweis mit empfohlenem Steuerungs-Adapter ergänzt und die Lizenzmetadaten verbessert."
