@@ -479,12 +479,9 @@ class ZendureIpAdapter extends utils.Adapter {
         let totalImportWhAdd = 0;
         let totalExportWhAdd = 0;
         let totalPvWhAdd = 0;
-        let totalPvToBatteryWhAdd = 0;
-
         let hemsGrossImportWhAdd = 0;
         let hemsGrossExportWhAdd = 0;
         let hemsPvWhAdd = 0;
-        let hemsPvToBatteryWhAdd = 0;
         let hemsProExportFullW = 0;
         let hemsImportOthersW = 0;
 
@@ -498,8 +495,6 @@ class ZendureIpAdapter extends utils.Adapter {
             const addImportWh = d.acChargingW * whFactor;
             const addExportWh = d.acDischargingW * whFactor;
             const addPvWh = d.solarInputPower * whFactor;
-            const addPvToBatteryWh = flows.pvToBatteryW * whFactor;
-
             await this.addWhAndUpdateKWh(`${d.id}.today.acImportTodayWh`, `${d.id}.today.acImportTodayKWh`, addImportWh);
             await this.addWhAndUpdateKWh(`${d.id}.today.acExportTodayWh`, `${d.id}.today.acExportTodayKWh`, addExportWh);
             await this.addWhAndUpdateKWh(`${d.id}.today.pvTodayWh`, `${d.id}.today.pvTodayKWh`, addPvWh);
@@ -508,15 +503,11 @@ class ZendureIpAdapter extends utils.Adapter {
             totalImportWhAdd += addImportWh;
             totalExportWhAdd += addExportWh;
             totalPvWhAdd += addPvWh;
-            totalPvToBatteryWhAdd += addPvToBatteryWh;
-
             if (d.isInHems) {
                 this.addFlows(hemsFlows, flows);
                 hemsGrossImportWhAdd += addImportWh;
                 hemsGrossExportWhAdd += addExportWh;
                 hemsPvWhAdd += addPvWh;
-                hemsPvToBatteryWhAdd += addPvToBatteryWh;
-
                 if (d.type === "pro" && d.soc >= PRO_FULL_SOC_PCT) hemsProExportFullW += d.acDischargingW;
                 if (d.type !== "pro") hemsImportOthersW += d.acChargingW;
             }
@@ -527,13 +518,11 @@ class ZendureIpAdapter extends utils.Adapter {
         await this.addWhAndUpdateKWh("TOTAL.today.acImportTodayWh", "TOTAL.today.acImportTodayKWh", totalImportWhAdd);
         await this.addWhAndUpdateKWh("TOTAL.today.acExportTodayWh", "TOTAL.today.acExportTodayKWh", totalExportWhAdd);
         await this.addWhAndUpdateKWh("TOTAL.today.pvTodayWh", "TOTAL.today.pvTodayKWh", totalPvWhAdd);
-        await this.addWhAndUpdateKWh("TOTAL.today.pvToBatteryTodayWh", "TOTAL.today.pvToBatteryTodayKWh", totalPvToBatteryWhAdd);
 
         if (this.devices.some(d => d.isInHems)) {
             await this.writeFlows("HEMS.flows", hemsFlows, snapshots.some(d => d.isInHems && d.active));
             await this.updateEnergyDayCounters("HEMS.today", hemsFlows, dtSec);
             await this.addWhAndUpdateKWh("HEMS.today.pvTodayWh", "HEMS.today.pvTodayKWh", hemsPvWhAdd);
-            await this.addWhAndUpdateKWh("HEMS.today.pvToBatteryTodayWh", "HEMS.today.pvToBatteryTodayKWh", hemsPvToBatteryWhAdd);
 
             await this.updateHemsLoopAwareToday(hemsGrossImportWhAdd, hemsGrossExportWhAdd, hemsProExportFullW, hemsImportOthersW, dtSec);
         }

@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "zendure-ip",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "news": {
+      "0.0.14": {
+        "en": "Fixed duplicate pvToBatteryToday accumulation in TOTAL and HEMS daily counters and documented TOTAL vs HEMS overlap.",
+        "de": "Doppelte pvToBatteryToday-Aufzählung in TOTAL- und HEMS-Tageszählern behoben und die Überschneidung von TOTAL und HEMS dokumentiert."
+      },
       "0.0.13": {
         "en": "Added device flow objects, extended daily Wh/kWh counters, loop-aware net HEMS daily counters with gross debug and internal-loop tracking, wear-level weighted HEMS energy, manual daily reset, and additional local polling states.",
         "de": "Geräte-Flow-Objekte, erweiterte Tageszähler in Wh/kWh, loop-aware Netto-HEMS-Tageswerte mit Brutto-Debug und internem Loop-Zähler, WearLevel-gewichtete HEMS-Energie, manuellen Tagesreset und zusätzliche lokale Polling-States ergänzt."

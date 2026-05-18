@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.0.13-00a17f.svg" alt="Version 0.0.13" />
+  <img src="https://img.shields.io/badge/version-0.0.14-00a17f.svg" alt="Version 0.0.14" />
   <img src="https://img.shields.io/badge/language-JavaScript-00a17f.svg?logo=javascript&logoColor=fff" alt="JavaScript" />
   <img src="https://img.shields.io/badge/license-MIT-00a17f.svg" alt="MIT License" />
 </p>
@@ -92,6 +92,12 @@ All daily energy counters are accumulated internally in Wh and the matching kWh 
 ### <img src="icons/hems.svg" width="17" alt="" /> TOTAL aggregate
 
 Under `TOTAL/today`, the adapter stores the same daily counters across all configured devices.
+
+### TOTAL vs HEMS overlap
+
+`TOTAL.*` always contains all configured devices. `HEMS.*` contains only devices marked with **Device is in HEMS**. If all configured devices are marked as HEMS devices, many `TOTAL.*` and `HEMS.*` values are intentionally identical.
+
+Legacy-style counters such as `pvToday*`, `acImportToday*` and `acExportToday*` are kept for compatibility. The detailed flow counters use names like `pvIn*`, `acOutTotal*`, `batteryCharge*` and `batteryDischarge*`.
 
 ### <img src="icons/hems.svg" width="17" alt="" /> HEMS aggregate
 
