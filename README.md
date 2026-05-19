@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.0.14-00a17f.svg" alt="Version 0.0.14" />
+  <img src="https://img.shields.io/badge/version-0.0.15-00a17f.svg" alt="Version 0.0.15" />
   <img src="https://img.shields.io/badge/language-JavaScript-00a17f.svg?logo=javascript&logoColor=fff" alt="JavaScript" />
   <img src="https://img.shields.io/badge/license-MIT-00a17f.svg" alt="MIT License" />
 </p>
@@ -28,6 +28,7 @@
 - Spaces in device names are converted to `-`
 - Curated device states based on the provided per-device script set
 - Optional **HEMS** object tree for devices marked with **Device is in HEMS**
+- Configurable battery capacity per device for correct remaining/usable kWh values
 - Per-device flow states under `device-name/flows`
 - Per-device daily counters under `device-name/today`
 - Total flow and daily counters for all configured devices under `TOTAL`
@@ -48,10 +49,10 @@ Each device gets a compact state set such as:
 - `outputPackPower`, `packInputPower`
 - `minSocRaw`, `minSocPct`, `socSetRaw`, `socSetPct`, `socLimit`
 - `smartMode`, `inHems`, `deviceIsInHems`
-- `packNum`, `deviceType`, `capacityKWh`, `wearLevelPct`
+- `packNum`, `deviceType`, `capacityKWh`, `capacitySource`, `wearLevelPct`
 - `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `lastError`, `rawJson`
 
-`wearLevelPct` is writable and defaults to `100`. It is used for the HEMS energy and wear-weighted SoC calculation.
+`capacityKWh` is taken from the adapter configuration when set. If no capacity is configured, the adapter falls back to a best-effort automatic value. `wearLevelPct` is writable and defaults to `100`. Both values are used for the HEMS energy and wear-weighted SoC calculation.
 
 ## <img src="icons/features.svg" width="18" alt="" /> Flow objects
 
@@ -132,12 +133,21 @@ HEMS membership is controlled by the adapter configuration checkbox **Device is 
 
 ## <img src="icons/config.svg" width="18" alt="" /> Configuration
 
-The adapter configuration page is intentionally small:
+The adapter configuration page contains:
 
 - **Device name**
 - **IP address**
+- **Capacity (kWh)**
 - **Interval (s)**
 - **Device is in HEMS**
+
+Recommended starting values for the current setup:
+
+- `1600AC+`: `2.0` kWh
+- `2400AC+`: `2.4` kWh
+- `2400 Pro` with the current three-battery setup: `7.4` kWh
+
+`HEMS.energyRemainingKWh` is calculated as `SoC / 100 * capacityKWh * wearLevelPct / 100` for every active HEMS device and then summed. `HEMS.energyUsableKWh` uses the same capacity and wear correction, but only counts the energy above the aggregated HEMS reserve `minSocPct`.
 
 ## <img src="icons/notes.svg" width="18" alt="" /> Notes
 

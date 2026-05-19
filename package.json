@@ -1,7 +1,7 @@
 {
   "name": "iobroker.zendure-ip",
-  "version": "0.0.14",
-  "description": "ioBroker adapter to poll local Zendure device JSON via IP for up to 10 devices, optionally aggregate selected devices into a HEMS object tree, generate flow states and loop-aware daily counters.",
+  "version": "0.0.15",
+  "description": "ioBroker adapter to poll local Zendure device JSON via IP for up to 10 devices, optionally aggregate selected devices into a HEMS object tree, generate flow states and loop-aware daily counters with configurable battery capacities.",
   "author": "OpenAI",
   "license": "MIT",
   "repository": {

@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "zendure-ip",
-    "version": "0.0.14",
+    "version": "0.0.15",
     "news": {
+      "0.0.15": {
+        "en": "Added per-device configurable battery capacity in the adapter configuration and made it authoritative for HEMS remaining/usable energy calculations.",
+        "de": "Konfigurierbare Akku-Kapazität pro Gerät in der Adapter-Konfiguration ergänzt und als maßgebliche Basis für HEMS-Restenergie/nutzbare Energie verwendet."
+      },
       "0.0.14": {
         "en": "Fixed duplicate pvToBatteryToday accumulation in TOTAL and HEMS daily counters and documented TOTAL vs HEMS overlap.",
         "de": "Doppelte pvToBatteryToday-Aufzählung in TOTAL- und HEMS-Tageszählern behoben und die Überschneidung von TOTAL und HEMS dokumentiert."
@@ -65,8 +69,8 @@
       "de": "Zendure IP"
     },
     "desc": {
-      "en": "Polls local Zendure devices via IP, stores a curated device state set, creates flow and daily energy counters, and can aggregate selected devices into a HEMS object tree.",
-      "de": "Fragt lokale Zendure-Geräte per IP ab, speichert einen kuratierten Geräte-State-Satz, erzeugt Flow- und Tagesenergiezähler und kann ausgewählte Geräte in einen HEMS-Objektbaum aggregieren."
+      "en": "Polls local Zendure devices via IP, stores a curated device state set, creates flow and daily energy counters, and can aggregate selected devices into a HEMS object tree with configurable battery capacities.",
+      "de": "Fragt lokale Zendure-Geräte per IP ab, speichert einen kuratierten Geräte-State-Satz, erzeugt Flow- und Tagesenergiezähler und kann ausgewählte Geräte mit konfigurierbarer Akku-Kapazität in einen HEMS-Objektbaum aggregieren."
     },
     "authors": [
       "OpenAI"

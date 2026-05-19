@@ -12,7 +12,7 @@
     },
     "devicesText": {
       "type": "staticText",
-      "text": "The adapter polls each device. Enable 'Device is in HEMS' for devices that should be included in the aggregated HEMS object tree.",
+      "text": "The adapter polls each device. Set the battery capacity in kWh for correct HEMS energyRemainingKWh and energyUsableKWh values. Enable 'Device is in HEMS' for devices that should be included in the aggregated HEMS object tree.",
       "style": {
         "fontSize": "1.05em",
         "marginBottom": "0.75rem"
@@ -29,13 +29,22 @@
           "type": "text",
           "attr": "name",
           "title": "Device name",
-          "width": "28%"
+          "width": "22%"
         },
         {
           "type": "text",
           "attr": "ip",
           "title": "IP address",
-          "width": "28%"
+          "width": "22%"
+        },
+        {
+          "type": "number",
+          "attr": "capacityKWh",
+          "title": "Capacity (kWh)",
+          "min": 0.1,
+          "step": 0.1,
+          "default": 2.4,
+          "width": "18%"
         },
         {
           "type": "number",
@@ -44,7 +53,7 @@
           "min": 1,
           "step": 1,
           "default": 10,
-          "width": "18%"
+          "width": "15%"
         },
         {
           "type": "checkbox",
@@ -55,6 +64,23 @@
       ],
       "style": {
         "fontSize": "1.03em"
+      }
+    },
+    "capacityHeader": {
+      "type": "header",
+      "text": "Capacity examples",
+      "newLine": true,
+      "style": {
+        "fontSize": "1.1em",
+        "marginTop": "1rem"
+      }
+    },
+    "capacityText": {
+      "type": "staticText",
+      "text": "Typical values: 1600AC+ = 2.0 kWh, 2400AC+ = 2.4 kWh, 2400 Pro with your current 3-battery setup = 7.4 kWh. Adjust these values if your battery setup changes.",
+      "style": {
+        "fontSize": "1.05em",
+        "marginBottom": "0.75rem"
       }
     },
     "noteHeader": {

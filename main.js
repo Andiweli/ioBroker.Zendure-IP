@@ -126,9 +126,10 @@ class ZendureIpAdapter extends utils.Adapter {
             ip: String(device.ip).trim(),
             intervalSec: Number(device.intervalSec) > 0 ? Number(device.intervalSec) : DEFAULT_INTERVAL_SEC,
             isInHems: !!device.isInHems,
+            configuredCapacityKWh: this.normalizeCapacityKWh(device.capacityKWh, 0),
             inFlight: false,
             type: "ac",
-            capKWh: 2.4,
+            capKWh: this.normalizeCapacityKWh(device.capacityKWh, 0) || 2.4,
         }));
 
         for (const dev of this.devices) {
@@ -234,7 +235,7 @@ class ZendureIpAdapter extends utils.Adapter {
         const packs = this.safeNum(packNum, 0);
 
         if (isPro) {
-            // Current user setup: SolarFlow 2400 Pro + three packs ~= 7.4 kWh.
+            // Fallback only. The adapter configuration is authoritative when capacityKWh is set.
             if (packs > 1) return 7.4;
 
             const packType = this.safeNum((Array.isArray(packData) && packData[0] && packData[0].packType) || 0, 0);
@@ -245,6 +246,12 @@ class ZendureIpAdapter extends utils.Adapter {
         if (productLc.includes("1600")) return 2.0;
         if (productLc.includes("2400")) return 2.4;
         return 2.4;
+    }
+
+    normalizeCapacityKWh(value, fallback = 0) {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n <= 0) return fallback;
+        return Math.round(n * 100) / 100;
     }
 
     async pollDevice(dev) {
@@ -260,7 +267,9 @@ class ZendureIpAdapter extends utils.Adapter {
             const isPro = this.inferIsPro(product, packNum);
 
             dev.type = isPro ? "pro" : "ac";
-            dev.capKWh = this.inferCapacityKWh(product, packNum, json.packData, isPro);
+            const inferredCapacityKWh = this.inferCapacityKWh(product, packNum, json.packData, isPro);
+            const configuredCapacityKWh = this.normalizeCapacityKWh(dev.configuredCapacityKWh, 0);
+            dev.capKWh = configuredCapacityKWh || inferredCapacityKWh;
 
             const gridInputPower = this.safeNum(p.gridInputPower, 0);
             const outputHomePower = this.safeNum(p.outputHomePower, 0);
@@ -302,6 +311,7 @@ class ZendureIpAdapter extends utils.Adapter {
                 deviceIsInHems: !!dev.isInHems,
                 packNum,
                 capacityKWh: dev.capKWh,
+                capacitySource: configuredCapacityKWh > 0 ? "config" : "auto",
                 deviceType: dev.type,
 
                 rssi: this.safeNum(p.rssi, 0),
@@ -370,7 +380,9 @@ class ZendureIpAdapter extends utils.Adapter {
             const stale = !!(await this.getStateAsync(`${base}.stale`))?.val;
             const active = online && !stale;
             const type = String((await this.getStateAsync(`${base}.deviceType`))?.val || dev.type || "ac");
-            const capKWh = await this.getStateNum(`${base}.capacityKWh`, Number(dev.capKWh) > 0 ? Number(dev.capKWh) : (type === "pro" ? 7.4 : 2.4));
+            const fallbackCapKWh = Number(dev.capKWh) > 0 ? Number(dev.capKWh) : (type === "pro" ? 7.4 : 2.4);
+            const stateCapKWh = await this.getStateNum(`${base}.capacityKWh`, fallbackCapKWh);
+            const capKWh = this.normalizeCapacityKWh(Number(dev.capKWh) > 0 ? dev.capKWh : stateCapKWh, fallbackCapKWh);
             const wearLevelPct = Math.min(100, Math.max(0, await this.getStateNum(`${base}.wearLevelPct`, 100) || 100));
 
             out.push({
@@ -802,7 +814,8 @@ class ZendureIpAdapter extends utils.Adapter {
             ["messageId", "string", "text", ""],
             ["timestamp", "number", "value.time", 0, "ms"],
             ["deviceType", "string", "text", "ac"],
-            ["capacityKWh", "number", "value.energy", 2.4, "kWh"],
+            ["capacityKWh", "number", "value.energy", this.normalizeCapacityKWh(dev.capKWh, 2.4), "kWh", false, "Battery capacity from adapter config"],
+            ["capacitySource", "string", "text", "config"],
             ["deviceIsInHems", "boolean", "indicator", !!dev.isInHems],
 
             ["soc", "number", "value.battery", 0, "%"],
