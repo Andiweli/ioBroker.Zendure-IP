@@ -77,6 +77,11 @@ class ZendureIpAdapter extends utils.Adapter {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
+    normalizeStateId(id) {
+        const prefix = `${this.namespace}.`;
+        return String(id || "").startsWith(prefix) ? String(id).slice(prefix.length) : String(id || "");
+    }
+
     stateNum(val, fallback = 0) {
         const n = Number(val);
         return Number.isFinite(n) ? n : fallback;
@@ -136,6 +141,8 @@ class ZendureIpAdapter extends utils.Adapter {
             await this.ensureDeviceObjects(dev);
             await this.ensureFlowObjects(dev.id);
             await this.ensureDeviceTodayObjects(dev.id);
+            this.subscribeStates(`${dev.id}.gridOffMode`);
+            this.subscribeStates(`${dev.id}.smartMode`);
         }
 
         await this.ensureTotalObjects();
@@ -182,19 +189,63 @@ class ZendureIpAdapter extends utils.Adapter {
         }
     }
 
+    findDeviceControlTarget(relativeId) {
+        for (const dev of this.devices) {
+            if (relativeId === `${dev.id}.gridOffMode`) return { dev, property: "gridOffMode" };
+            if (relativeId === `${dev.id}.smartMode`) return { dev, property: "smartMode" };
+        }
+        return null;
+    }
+
+    normalizeControlValue(property, value) {
+        if (typeof value === "boolean") {
+            if (property === "gridOffMode") return value ? 1 : 2;
+            if (property === "smartMode") return value ? 1 : 0;
+        }
+
+        if (typeof value === "string") {
+            const trimmed = value.trim().toLowerCase();
+            if (["true", "on", "ein", "yes", "ja"].includes(trimmed)) {
+                if (property === "gridOffMode") return 1;
+                if (property === "smartMode") return 1;
+            }
+            if (["false", "off", "aus", "no", "nein"].includes(trimmed)) {
+                if (property === "gridOffMode") return 2;
+                if (property === "smartMode") return 0;
+            }
+        }
+
+        const n = Number(value);
+        if (!Number.isFinite(n)) return null;
+        const intVal = Math.trunc(n);
+
+        if (property === "gridOffMode" && (intVal === 1 || intVal === 2)) return intVal;
+        if (property === "smartMode" && (intVal === 0 || intVal === 1)) return intVal;
+        return null;
+    }
+
     async onStateChange(id, state) {
         if (!state || state.ack) return;
-        if (id !== `${this.namespace}.control.resetToday` && id !== "control.resetToday") return;
-        if (state.val !== true) return;
 
-        try {
-            await this.resetAllTodayCounters(this.todayStr());
-            await this.setStateAsync("control.resetToday", { val: false, ack: true });
-            this.log.info("All daily counters were reset manually.");
-        } catch (err) {
-            const msg = err && err.message ? err.message : String(err);
-            this.log.warn(`Manual reset failed: ${msg}`);
+        const relativeId = this.normalizeStateId(id);
+        if (relativeId === "control.resetToday") {
+            if (state.val !== true) return;
+
+            try {
+                await this.resetAllTodayCounters(this.todayStr());
+                await this.setStateAsync("control.resetToday", { val: false, ack: true });
+                this.log.info("All daily counters were reset manually.");
+            } catch (err) {
+                const msg = err && err.message ? err.message : String(err);
+                this.log.warn(`Manual reset failed: ${msg}`);
+            }
+            return;
         }
+
+        const target = this.findDeviceControlTarget(relativeId);
+        if (!target) return;
+
+        await this.handleDeviceControlStateChange(target.dev, target.property, state.val);
     }
 
     fetchJson(ip) {
@@ -224,6 +275,96 @@ class ZendureIpAdapter extends utils.Adapter {
             req.on("error", reject);
             req.end();
         });
+    }
+
+    writeJson(ip, path, payload) {
+        return new Promise((resolve, reject) => {
+            const body = JSON.stringify(payload);
+            const req = http.request({
+                host: ip,
+                port: 80,
+                path,
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "Content-Length": Buffer.byteLength(body),
+                },
+                timeout: HTTP_TIMEOUT_MS,
+            }, res => {
+                let data = "";
+                res.setEncoding("utf8");
+                res.on("data", chunk => data += chunk);
+                res.on("end", () => {
+                    if (res.statusCode && res.statusCode >= 400) {
+                        return reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 300)}`));
+                    }
+
+                    const trimmed = data.trim();
+                    if (!trimmed) {
+                        return resolve({ success: true, statusCode: res.statusCode || 0 });
+                    }
+
+                    try {
+                        resolve(JSON.parse(trimmed));
+                    } catch {
+                        resolve({ success: true, statusCode: res.statusCode || 0, raw: data });
+                    }
+                });
+            });
+
+            req.on("timeout", () => req.destroy(new Error("HTTP timeout")));
+            req.on("error", reject);
+            req.write(body);
+            req.end();
+        });
+    }
+
+    async getDeviceSerial(dev) {
+        let serial = this.safeStr((await this.getStateAsync(`${dev.id}.serial`))?.val, "").trim();
+        if (serial) return serial;
+
+        await this.pollDevice(dev);
+        serial = this.safeStr((await this.getStateAsync(`${dev.id}.serial`))?.val, "").trim();
+        return serial;
+    }
+
+    async writeDeviceProperties(dev, properties) {
+        const serial = await this.getDeviceSerial(dev);
+        if (!serial) throw new Error("Device serial number is not available yet; wait for a successful poll first.");
+
+        return this.writeJson(dev.ip, "/properties/write", {
+            sn: serial,
+            properties,
+        });
+    }
+
+    async handleDeviceControlStateChange(dev, property, rawValue) {
+        const value = this.normalizeControlValue(property, rawValue);
+        if (value === null) {
+            const msg = property === "gridOffMode"
+                ? "Invalid gridOffMode. Allowed: 1=on, 2=off."
+                : "Invalid smartMode. Allowed: 0=off, 1=on.";
+            this.log.warn(`Device ${dev.id}: ${msg} Received: ${rawValue}`);
+            await this.setStateChangedAsync(`${dev.id}.lastControlError`, { val: msg, ack: true });
+            await this.pollDevice(dev);
+            return;
+        }
+
+        try {
+            this.log.info(`Device ${dev.id}: writing ${property}=${value}`);
+            const response = await this.writeDeviceProperties(dev, { [property]: value });
+            await this.setStateAsync(`${dev.id}.${property}`, { val: value, ack: true });
+            await this.setStateChangedAsync(`${dev.id}.lastControlUpdate`, { val: Date.now(), ack: true });
+            await this.setStateChangedAsync(`${dev.id}.lastControlError`, { val: "", ack: true });
+            await this.setStateChangedAsync(`${dev.id}.lastControlResponse`, { val: this.clipRaw(response, 1000), ack: true });
+            await this.pollDevice(dev);
+        } catch (err) {
+            const msg = err && err.message ? err.message : String(err);
+            this.log.warn(`Device ${dev.id}: writing ${property} failed: ${msg}`);
+            await this.setStateChangedAsync(`${dev.id}.lastControlError`, { val: msg, ack: true });
+            await this.pollDevice(dev);
+        }
     }
 
     inferIsPro(product, packNum) {
@@ -273,6 +414,8 @@ class ZendureIpAdapter extends utils.Adapter {
 
             const gridInputPower = this.safeNum(p.gridInputPower, 0);
             const outputHomePower = this.safeNum(p.outputHomePower, 0);
+            const gridOffMode = this.safeNum(p.gridOffMode, 0);
+            const gridOffPower = this.safeNum(p.gridOffPower, 0);
             const smartMode = this.safeNum(p.smartMode, 0);
             const minSocRaw = this.safeNum(p.minSoc, 0);
             const socSetRaw = this.safeNum(p.socSet, 0);
@@ -291,6 +434,9 @@ class ZendureIpAdapter extends utils.Adapter {
 
                 outputHomePower,
                 gridInputPower,
+                gridOffPower,
+                gridOffMode,
+                gridOffActive: gridOffMode === 1,
 
                 solarInputPower: this.safeNum(p.solarInputPower, 0),
                 solarPower1: this.safeNum(p.solarPower1, 0),
@@ -307,6 +453,7 @@ class ZendureIpAdapter extends utils.Adapter {
                 socSetPct: this.toPctScaledBy10(socSetRaw),
                 socLimit: this.safeNum(p.socLimit, 0),
                 smartMode,
+                smartModeActive: smartMode === 1,
                 inHems: smartMode === 1,
                 deviceIsInHems: !!dev.isInHems,
                 packNum,
@@ -357,7 +504,7 @@ class ZendureIpAdapter extends utils.Adapter {
             if (ageSec >= ZERO_POWER_AFTER_SEC) {
                 const zeroStates = [
                     "acChargingW", "acDischargingW", "acDirectionW", "acPowerW",
-                    "outputHomePower", "gridInputPower",
+                    "outputHomePower", "gridInputPower", "gridOffPower",
                     "solarInputPower", "solarPower1", "solarPower2", "solarPower3", "solarPower4",
                     "outputPackPower", "packInputPower"
                 ];
@@ -384,6 +531,8 @@ class ZendureIpAdapter extends utils.Adapter {
             const stateCapKWh = await this.getStateNum(`${base}.capacityKWh`, fallbackCapKWh);
             const capKWh = this.normalizeCapacityKWh(Number(dev.capKWh) > 0 ? dev.capKWh : stateCapKWh, fallbackCapKWh);
             const wearLevelPct = Math.min(100, Math.max(0, await this.getStateNum(`${base}.wearLevelPct`, 100) || 100));
+            const gridOffMode = await this.getStateNum(`${base}.gridOffMode`, 0);
+            const smartMode = await this.getStateNum(`${base}.smartMode`, 0);
 
             out.push({
                 id: dev.id,
@@ -403,12 +552,16 @@ class ZendureIpAdapter extends utils.Adapter {
                 acPowerW: active ? Math.max(0, await this.getStateNum(`${base}.acPowerW`, 0)) : 0,
                 outputHomePower: active ? Math.max(0, await this.getStateNum(`${base}.outputHomePower`, 0)) : 0,
                 gridInputPower: active ? Math.max(0, await this.getStateNum(`${base}.gridInputPower`, 0)) : 0,
+                gridOffPower: active ? Math.max(0, await this.getStateNum(`${base}.gridOffPower`, 0)) : 0,
+                gridOffMode,
+                gridOffActive: gridOffMode === 1,
                 solarInputPower: active ? Math.max(0, await this.getStateNum(`${base}.solarInputPower`, 0)) : 0,
                 outputPackPower: active ? Math.max(0, await this.getStateNum(`${base}.outputPackPower`, 0)) : 0,
                 packInputPower: active ? Math.max(0, await this.getStateNum(`${base}.packInputPower`, 0)) : 0,
                 minSocPct: await this.getStateNum(`${base}.minSocPct`, 0),
                 socSetPct: await this.getStateNum(`${base}.socSetPct`, 0),
-                smartMode: await this.getStateNum(`${base}.smartMode`, 0),
+                smartMode,
+                smartModeActive: smartMode === 1,
             });
         }
         return out;
@@ -825,6 +978,9 @@ class ZendureIpAdapter extends utils.Adapter {
             ["acDischargingW", "number", "value.power", 0, "W"],
             ["outputHomePower", "number", "value.power", 0, "W"],
             ["gridInputPower", "number", "value.power", 0, "W"],
+            ["gridOffPower", "number", "value.power", 0, "W", false, "Off-grid outlet power"],
+            ["gridOffMode", "number", "value", 2, "", true, "Off-grid outlet mode (1=on, 2=off)"],
+            ["gridOffActive", "boolean", "indicator", false, "", false, "Off-grid outlet active"],
 
             ["solarInputPower", "number", "value.power", 0, "W"],
             ["solarPower1", "number", "value.power", 0, "W"],
@@ -840,7 +996,8 @@ class ZendureIpAdapter extends utils.Adapter {
             ["socSetRaw", "number", "value", 0],
             ["socSetPct", "number", "value.battery", 0, "%"],
             ["socLimit", "number", "value", 0],
-            ["smartMode", "number", "value", 0],
+            ["smartMode", "number", "value", 0, "", true, "Smart mode (0=off, 1=on)"],
+            ["smartModeActive", "boolean", "indicator", false, "", false, "Smart mode active"],
             ["inHems", "boolean", "indicator", false],
             ["packNum", "number", "value", 0],
             ["wearLevelPct", "number", "level", 100, "%", true, "Battery wear level"],
@@ -851,6 +1008,9 @@ class ZendureIpAdapter extends utils.Adapter {
             ["stale", "boolean", "indicator.maintenance", false],
             ["rssi", "number", "value", 0, "dBm"],
             ["lastError", "string", "text", ""],
+            ["lastControlUpdate", "number", "value.time", 0, "ms", false, "Last successful control write"],
+            ["lastControlError", "string", "text", "", "", false, "Last control write error"],
+            ["lastControlResponse", "string", "json", "", "", false, "Last control write response"],
             ["rawJson", "string", "json", ""],
         ];
         for (const [name, type, role, def, unit, write, label] of defs) {

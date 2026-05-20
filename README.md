@@ -5,11 +5,11 @@
 <h1 align="center">Zendure IP</h1>
 
 <p align="center">
-  Local Zendure polling adapter for ioBroker with optional HEMS aggregation.
+  Local Zendure polling adapter for ioBroker with optional HEMS aggregation and selected local control states.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.0.15-00a17f.svg" alt="Version 0.0.15" />
+  <img src="https://img.shields.io/badge/version-0.0.16-00a17f.svg" alt="Version 0.0.16" />
   <img src="https://img.shields.io/badge/language-JavaScript-00a17f.svg?logo=javascript&logoColor=fff" alt="JavaScript" />
   <img src="https://img.shields.io/badge/license-MIT-00a17f.svg" alt="MIT License" />
 </p>
@@ -17,9 +17,8 @@
 > [!IMPORTANT]
 > This adapter polls Zendure devices locally via `http://<ip>/properties/report` and stores a curated state set instead of dumping the full raw JSON.
 
-> [!NOTE]
-> This adapter is **read-only**. It does not control Zendure devices; it reads data and generates flow states and daily counters.  
-> For full control features, the recommended adapter is [nograx' Zendure adapter](https://github.com/nograx/ioBroker.zendure-solarflow).
+> [!WARNING]
+> Starting with `0.0.16`, this adapter can also write selected local properties via `http://<ip>/properties/write`. Currently writable: `smartMode` and `gridOffMode`.
 
 ## <img src="icons/features.svg" width="18" alt="" /> Features
 
@@ -27,6 +26,7 @@
 - Device name becomes the folder name under the adapter namespace
 - Spaces in device names are converted to `-`
 - Curated device states based on the provided per-device script set
+- Selected local control via writable ioBroker states
 - Optional **HEMS** object tree for devices marked with **Device is in HEMS**
 - Configurable battery capacity per device for correct remaining/usable kWh values
 - Per-device flow states under `device-name/flows`
@@ -45,14 +45,34 @@ Each device gets a compact state set such as:
 - `soc`
 - `acPowerW`, `acDirectionW`, `acChargingW`, `acDischargingW`
 - `outputHomePower`, `gridInputPower`
+- `gridOffPower`, `gridOffMode`, `gridOffActive`
 - `solarInputPower`, `solarPower1..4`
 - `outputPackPower`, `packInputPower`
 - `minSocRaw`, `minSocPct`, `socSetRaw`, `socSetPct`, `socLimit`
-- `smartMode`, `inHems`, `deviceIsInHems`
+- `smartMode`, `smartModeActive`, `inHems`, `deviceIsInHems`
 - `packNum`, `deviceType`, `capacityKWh`, `capacitySource`, `wearLevelPct`
-- `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `lastError`, `rawJson`
+- `online`, `lastUpdate`, `ageSec`, `stale`, `rssi`, `lastError`, `lastControlUpdate`, `lastControlError`, `lastControlResponse`, `rawJson`
 
 `capacityKWh` is taken from the adapter configuration when set. If no capacity is configured, the adapter falls back to a best-effort automatic value. `wearLevelPct` is writable and defaults to `100`. Both values are used for the HEMS energy and wear-weighted SoC calculation.
+
+## <img src="icons/config.svg" width="18" alt="" /> Writable control states
+
+The adapter supports these selected local write states per device:
+
+- `device-name.gridOffMode`
+  - `1` = Off-grid outlet ON
+  - `2` = Off-grid outlet OFF
+- `device-name.smartMode`
+  - `1` = Smart mode ON
+  - `0` = Smart mode OFF
+
+The adapter sends writes as `POST /properties/write` with the detected device serial number and refreshes the device state afterwards.
+
+Additional control diagnostics:
+
+- `lastControlUpdate`
+- `lastControlError`
+- `lastControlResponse`
 
 ## <img src="icons/features.svg" width="18" alt="" /> Flow objects
 
@@ -129,7 +149,7 @@ Under `HEMS`:
 - `minSocPct`, `socSetPct`
 - `devicesConfigured`, `devicesActive`
 
-HEMS membership is controlled by the adapter configuration checkbox **Device is in HEMS**. `smartMode` is stored as an informational device state and is not used as the HEMS filter.
+HEMS membership is controlled by the adapter configuration checkbox **Device is in HEMS**. `smartMode` is stored as a device state and can be controlled, but it is not used as the HEMS filter.
 
 ## <img src="icons/config.svg" width="18" alt="" /> Configuration
 
@@ -151,11 +171,12 @@ Recommended starting values for the current setup:
 
 ## <img src="icons/notes.svg" width="18" alt="" /> Notes
 
-- The adapter is designed for **local readout only**
-- No write/control commands are sent to Zendure devices
+- The adapter is designed for local polling and selected local property writes
+- Only `smartMode` and `gridOffMode` are writable in this version
+- `gridOffMode` uses the observed Zendure mapping `1 = ON`, `2 = OFF`
 - Daily counters reset automatically when the date changes
 - All daily counters can be reset manually with `control.resetToday`
-- For an even more detailed adapter including control of your Zendure devices, please use the [Zendure SolarFlow Adapter from nograx](https://github.com/nograx/ioBroker.zendure-solarflow).
+- For a broader cloud/MQTT control adapter, please use the [Zendure SolarFlow Adapter from nograx](https://github.com/nograx/ioBroker.zendure-solarflow).
 
 ## <img src="icons/license.svg" width="18" alt="" /> License
 
